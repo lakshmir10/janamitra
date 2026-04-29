@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JanaMitra — Election Process Education</title>
+    <meta name="description" content="AI-powered election education assistant. 7 Google services. 16 languages.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        /* ---- THEME SYSTEM ---- */
+        :root {
+            --bg-primary:#0a0f1c;--bg-secondary:#111827;--bg-card:#1a2236;--bg-card-hover:#1f2a42;
+            --bg-input:#0d1322;--text-primary:#e8ecf4;--text-secondary:#8892a8;--text-muted:#5a6478;
+            --accent:#3b82f6;--accent-glow:rgba(59,130,246,0.25);--accent-green:#10b981;
+            --accent-amber:#f59e0b;--accent-red:#ef4444;--accent-purple:#8b5cf6;
+            --border:rgba(255,255,255,0.06);--border-light:rgba(255,255,255,0.1);
+            --user-bubble:#1e3a5f;--bot-bubble:#1a2236;--shadow:0 4px 24px rgba(0,0,0,0.3);
+        }
+        [data-theme="light"] {
+            --bg-primary:#f5f7fa;--bg-secondary:#ffffff;--bg-card:#f0f2f5;--bg-card-hover:#e4e7ec;
+            --bg-input:#ffffff;--text-primary:#1a1a2e;--text-secondary:#4a5568;--text-muted:#8892a8;
+            --accent:#2563eb;--accent-glow:rgba(37,99,235,0.15);--accent-green:#059669;
+            --accent-red:#dc2626;--accent-purple:#7c3aed;
+            --border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.12);
+            --user-bubble:#dbeafe;--bot-bubble:#f0f2f5;--shadow:0 4px 24px rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .message.user .message-content{color:#1e3a5f}
+        /* ---- BASE ---- */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+        .font-display{font-family:'DM Serif Display',Georgia,serif}
+        /* ---- LAYOUT ---- */
+        .app-container{position:relative;z-index:1;display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto 1fr;height:100vh}
+        .header{grid-column:1/-1;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg-secondary);gap:12px}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent-purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 16px var(--accent-glow)}
+        .logo h1{font-family:'DM Serif Display',Georgia,serif;font-size:20px;font-weight:400}
+        .logo h1 span{color:var(--accent)}
+        .header-controls{display:flex;align-items:center;gap:10px}
+        .hdr-select{background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:5px 8px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer}
+        .hdr-select option{background:var(--bg-secondary)}
+        .theme-toggle{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s}
+        .theme-toggle:hover{border-color:var(--accent)}
+        .hdr-badge{font-size:10px;color:var(--text-muted);background:var(--bg-card);padding:4px 10px;border-radius:16px;border:1px solid var(--border);display:flex;align-items:center;gap:5px;white-space:nowrap}
+        .hdr-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--accent-green);animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        /* ---- SIDEBAR ---- */
+        .sidebar{background:var(--bg-secondary);border-right:1px solid var(--border);padding:16px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+        .sb-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:0 6px;font-weight:600}
+        .topic-card{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all .2s}
+        .topic-card:hover{background:var(--bg-card-hover);transform:translateX(2px)}
+        .topic-card.active{border-color:var(--accent);background:rgba(59,130,246,0.08);box-shadow:0 0 10px var(--accent-glow)}
+        .tc-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+        .tc-icon{font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:7px}
+        [data-theme="light"] .tc-icon{background:rgba(0,0,0,0.04)}
+        .tc-title{font-size:13px;font-weight:600}
+        .tc-desc{font-size:11px;color:var(--text-secondary);line-height:1.4;padding-left:36px}
+        .quiz-btn{margin-top:auto;padding:12px;border-radius:10px;border:1px dashed var(--accent-purple);background:rgba(139,92,246,0.06);cursor:pointer;text-align:center;transition:all .2s;color:var(--accent-purple);font-weight:600;font-size:13px}
+        .quiz-btn:hover{background:rgba(139,92,246,0.12);transform:translateY(-1px)}
+        .sb-footer{text-align:center;font-size:9px;color:var(--text-muted);line-height:1.6;padding-top:6px}
+        /* ---- MAIN ---- */
+        .main{display:flex;flex-direction:column;overflow:hidden}
+        .messages{flex:1;overflow-y:auto;padding:20px 28px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}
+        .messages::-webkit-scrollbar{width:3px}
+        .messages::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:3px}
+        /* ---- ONBOARDING ---- */
+        .onboarding{flex:1;display:flex;align-items:center;justify-content:center;padding:32px;animation:fadeIn .5s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .onboard-card{text-align:center;max-width:520px}
+        .onboard-icon{font-size:52px;margin-bottom:16px;filter:drop-shadow(0 0 20px var(--accent-glow))}
+        .onboard-card h2{font-family:'DM Serif Display',Georgia,serif;font-size:26px;margin-bottom:8px}
+        .onboard-card p{color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px}
+        .country-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+        .country-btn{padding:16px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all .2s;text-align:center;font-family:inherit;color:var(--text-primary)}
+        .country-btn:hover{border-color:var(--accent);background:rgba(59,130,246,0.06);transform:translateY(-2px)}
+        .country-btn .cflag{font-size:28px;display:block;margin-bottom:6px}
+        .country-btn .cname{font-size:12px;font-weight:600}
+        /* ---- WELCOME (post-country) ---- */
+        .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px;padding:32px;animation:fadeIn .5s ease}
+        .welcome h2{font-family:'DM Serif Display',Georgia,serif;font-size:24px}
+        .welcome p{color:var(--text-secondary);font-size:14px;max-width:460px;line-height:1.7}
+        .svc-badges{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+        .svc-badge{font-size:9px;padding:3px 9px;border-radius:10px;border:1px solid var(--border);color:var(--text-secondary);background:var(--bg-card)}
+        .quick-starts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:540px}
+        .qs-btn{background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:9px 16px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit}
+        .qs-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+        /* ---- MESSAGES ---- */
+        .message{display:flex;gap:10px;max-width:750px;animation:msgIn .3s ease}
+        @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .message.user{align-self:flex-end;flex-direction:row-reverse}
+        .msg-avatar{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px}
+        .message.bot .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent-purple));box-shadow:0 0 10px var(--accent-glow)}
+        .message.user .msg-avatar{background:var(--user-bubble)}
+        .msg-body{padding:12px 16px;border-radius:14px;line-height:1.7;font-size:13.5px}
+        .message.bot .msg-body{background:var(--bot-bubble);border:1px solid var(--border);border-bottom-left-radius:4px}
+        .message.user .msg-body{background:var(--user-bubble);border-bottom-right-radius:4px}
+        .msg-body p{margin-bottom:8px}.msg-body p:last-child{margin-bottom:0}
+        .msg-body strong{color:var(--accent);font-weight:600}
+        .msg-body ul,.msg-body ol{padding-left:18px;margin:6px 0}.msg-body li{margin-bottom:3px}
+        .msg-body code{background:rgba(128,128,128,0.15);padding:1px 5px;border-radius:4px;font-size:12px}
+        .msg-body h3{font-size:14px;font-weight:700;margin:10px 0 4px;color:var(--accent)}
+        .msg-actions{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+        .ma-btn{font-size:10px;padding:3px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:3px}
+        .ma-btn:hover{border-color:var(--accent);color:var(--accent)}
+        .ma-btn.playing{border-color:var(--accent-green);color:var(--accent-green)}
+        .topic-badge{background:rgba(59,130,246,0.12);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500}
+        .src-link{color:var(--accent);text-decoration:none;font-size:10px}.src-link:hover{text-decoration:underline}
+        .vid-cards{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+        .vid-card{background:var(--bg-card);border:1px solid var(--border);border-radius:9px;overflow:hidden;width:220px;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--text-primary)}
+        .vid-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+        .vid-card img{width:100%;height:124px;object-fit:cover}
+        .vid-info{padding:7px 9px}
+        .vid-title{font-size:10px;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .vid-ch{font-size:9px;color:var(--text-muted);margin-top:2px}
+        .translated-block{margin-top:8px;padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);border-radius:9px;font-size:12px;line-height:1.7}
+        .translated-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:4px;font-weight:600}
+        /* ---- TYPING ---- */
+        .typing{display:none;gap:10px;max-width:750px}
+        .typing.visible{display:flex}
+        .typing-dots{padding:12px 16px;background:var(--bot-bubble);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;display:flex;gap:4px;align-items:center}
+        .typing-dots span{width:6px;height:6px;background:var(--text-muted);border-radius:50%;animation:bounce 1.4s infinite}
+        .typing-dots span:nth-child(2){animation-delay:.2s}
+        .typing-dots span:nth-child(3){animation-delay:.4s}
+        @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+        /* ---- INPUT ---- */
+        .input-area{padding:14px 28px 18px;border-top:1px solid var(--border);background:var(--bg-secondary)}
+        .input-wrap{display:flex;gap:8px;align-items:flex-end;max-width:750px;margin:0 auto}
+        .input-field{flex:1;background:var(--bg-input);border:1px solid var(--border-light);border-radius:10px;padding:12px 16px;color:var(--text-primary);font-size:13.5px;font-family:inherit;resize:none;min-height:44px;max-height:110px;line-height:1.5;transition:border .2s}
+        .input-field:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+        .input-field::placeholder{color:var(--text-muted)}
+        .send-btn{width:44px;height:44px;border-radius:10px;border:none;background:var(--accent);color:white;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+        .send-btn:hover{background:#2563eb;transform:scale(1.04)}.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+        .input-hint{text-align:center;font-size:10px;color:var(--text-muted);margin-top:6px}
+        /* ---- QUIZ MODAL ---- */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:100;align-items:center;justify-content:center;padding:20px}
+        .modal-bg.visible{display:flex;animation:fadeIn .2s}
+        .modal{background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:14px;padding:28px;max-width:500px;width:100%;box-shadow:var(--shadow)}
+        .modal h3{font-family:'DM Serif Display',Georgia,serif;font-size:19px;margin-bottom:5px}
+        .modal-sub{font-size:12px;color:var(--text-secondary);margin-bottom:18px}
+        .quiz-q{font-size:14px;line-height:1.6;margin-bottom:16px;font-weight:500}
+        .quiz-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+        .quiz-opt{padding:11px 14px;border:1px solid var(--border-light);border-radius:10px;background:var(--bg-card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--text-primary);text-align:left;transition:all .2s}
+        .quiz-opt:hover{border-color:var(--accent);background:rgba(59,130,246,0.06)}
+        .quiz-opt.correct{border-color:var(--accent-green);background:rgba(16,185,129,0.1);color:var(--accent-green)}
+        .quiz-opt.wrong{border-color:var(--accent-red);background:rgba(239,68,68,0.1);color:var(--accent-red)}
+        .quiz-opt.disabled{pointer-events:none;opacity:.6}
+        .quiz-expl{display:none;padding:12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px}
+        .quiz-expl.visible{display:block}
+        .modal-btns{display:flex;gap:8px;justify-content:flex-end}
+        .m-btn{padding:9px 18px;border-radius:10px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text-primary);font-size:12px;font-family:inherit;cursor:pointer;font-weight:500;transition:all .2s}
+        .m-btn:hover{background:var(--bg-card-hover)}.m-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.m-btn.primary:hover{background:#2563eb}
+        /* ---- RESPONSIVE ---- */
+        @media(max-width:768px){
+            .app-container{grid-template-columns:1fr}
+            .sidebar{display:none;border-right:none;border-bottom:1px solid var(--border);max-height:50vh}
+            .sidebar.mob-open{display:flex}
+            .mob-toggle{display:flex!important}
+            .messages{padding:14px}.input-area{padding:10px 14px 14px}
+            .country-grid{grid-template-columns:repeat(2,1fr)}
+            .vid-cards{flex-direction:column}.vid-card{width:100%}
+            .hdr-badge{display:none}
+        }
+        .mob-toggle{display:none;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);align-items:center;justify-content:center;cursor:pointer;font-size:15px}
+    </style>
+</head>
+<body data-theme="dark">
+<div class="app-container">
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            <button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('mob-open')" aria-label="Menu">☰</button>
+            <div class="logo-icon">🗳️</div>
+            <h1 class="font-display">Jana<span>Mitra</span></h1>
+        </div>
+        <div class="header-controls">
+            <select class="hdr-select" id="langSelect" aria-label="Language">
+                {% for code, name in languages.items() %}
+                <option value="{{code}}" {%if code=='en'%}selected{%endif%}>{{name}}</option>
+                {% endfor %}
+            </select>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+            <div class="hdr-badge"><span class="dot"></span>7 Google Services</div>
+        </div>
+    </header>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sb-label">Explore Topics</div>
+        {% for key, t in topics.items() %}
+        <div class="topic-card" data-topic="{{key}}" onclick="selectTopic('{{key}}')">
+            <div class="tc-header"><div class="tc-icon">{{t.icon}}</div><div class="tc-title">{{t.label}}</div></div>
+            <div class="tc-desc">{{t.description}}</div>
+        </div>
+        {% endfor %}
+        <div class="quiz-btn" onclick="openQuiz()">🧠 Test Your Knowledge</div>
+        <div class="sb-footer">Built with Google Cloud<br>Gemini · Run · Search · Civic · Translate · TTS · YouTube</div>
+    </aside>
+    <!-- MAIN -->
+    <main class="main">
+        <div class="messages" id="messages">
+            <!-- ONBOARDING: Country selection -->
+            <div class="onboarding" id="onboarding">
+                <div class="onboard-card">
+                    <div class="onboard-icon">🗳️</div>
+                    <h2 class="font-display">Welcome to JanaMitra</h2>
+                    <p>Your AI-powered friend for understanding elections.<br>First, pick your country so I can tailor everything to your electoral system.</p>
+                    <div class="country-grid">
+                        {% for code, c in countries.items() %}
+                        <button class="country-btn" onclick="selectCountry('{{code}}')">
+                            <span class="cflag">{{c.flag}}</span>
+                            <span class="cname">{{c.name}}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <!-- WELCOME: After country selection (hidden initially) -->
+            <div class="welcome" id="welcomeScreen" style="display:none">
+                <div style="font-size:44px" id="welcomeFlag">🗳️</div>
+                <h2 class="font-display" id="welcomeTitle">Let's learn about elections!</h2>
+                <p id="welcomeDesc">Ask me anything about voter registration, electoral systems, voting methods, or how your government works.</p>
+                <div class="svc-badges">
+                    <span class="svc-badge">🧠 Gemini AI</span><span class="svc-badge">☁️ Cloud Run</span>
+                    <span class="svc-badge">🔍 Search</span><span class="svc-badge">🏛️ Civic API</span>
+                    <span class="svc-badge">🌐 Translate</span><span class="svc-badge">🔊 TTS</span>
+                    <span class="svc-badge">▶️ YouTube</span>
+                </div>
+                <div class="quick-starts" id="quickStarts"></div>
+            </div>
+            <!-- TYPING -->
+            <div class="typing" id="typing">
+                <div class="msg-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-purple));box-shadow:0 0 10px var(--accent-glow)">🗳️</div>
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+        <div class="input-area">
+            <div class="input-wrap">
+                <textarea class="input-field" id="userInput" placeholder="Ask about elections..." rows="1" aria-label="Your question" disabled></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send" disabled>➤</button>
+            </div>
+            <div class="input-hint">JanaMitra provides educational info only — verify with official sources</div>
+        </div>
+    </main>
+</div>
+<!-- QUIZ MODAL -->
+<div class="modal-bg" id="quizModal">
+    <div class="modal">
+        <h3 class="font-display">🧠 Election Quiz</h3>
+        <p class="modal-sub" id="quizSub">Test your knowledge</p>
+        <div class="quiz-q" id="quizQ">Loading...</div>
+        <div class="quiz-opts" id="quizOpts"></div>
+        <div class="quiz-expl" id="quizExpl"></div>
+        <div class="modal-btns">
+            <button class="m-btn" onclick="closeQuiz()">Close</button>
+            <button class="m-btn primary" id="nextQ" onclick="loadQuiz()" style="display:none">Next →</button>
+        </div>
+    </div>
+</div>
+<script>
+const COUNTRIES={{countries|tojson}};
+let selectedCountry=null,conversationHistory=[],msgCount=0,quizScore=0,currentTopic=null,currentQuiz=null,audio=null;
+const $=id=>document.getElementById(id);
+
+// ---- THEME ----
+function toggleTheme(){
+    const body=document.body;
+    const isDark=body.getAttribute('data-theme')==='dark';
+    body.setAttribute('data-theme',isDark?'light':'dark');
+    $('themeBtn').textContent=isDark?'☀️':'🌙';
+    localStorage.setItem('jm-theme',isDark?'light':'dark');
+}
+(()=>{const t=localStorage.getItem('jm-theme');if(t){document.body.setAttribute('data-theme',t);$('themeBtn').textContent=t==='light'?'☀️':'🌙'}})();
+
+// ---- COUNTRY ONBOARDING ----
+function selectCountry(code){
+    selectedCountry=code;
+    const c=COUNTRIES[code];
+    $('onboarding').style.display='none';
+    $('welcomeScreen').style.display='flex';
+    $('welcomeFlag').textContent=c.flag;
+    $('welcomeTitle').textContent=`Elections in ${c.name}`;
+    $('welcomeDesc').textContent=`${c.system}. Ask me anything!`;
+    // Dynamic quick starts
+    const qs=$('quickStarts');
+    qs.innerHTML='';
+    c.quick_starts.forEach(s=>{
+        const btn=document.createElement('button');
+        btn.className='qs-btn';btn.textContent=s.label;
+        btn.onclick=()=>sendQuickStart(s.q);
+        qs.appendChild(btn);
+    });
+    $('userInput').disabled=false;
+    $('sendBtn').disabled=false;
+    $('userInput').focus();
+    document.getElementById('sidebar').classList.remove('mob-open');
+}
+
+// ---- TOPIC ----
+function selectTopic(t){
+    currentTopic=t;
+    document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('active'));
+    document.querySelector(`[data-topic="${t}"]`)?.classList.add('active');
+    if(!selectedCountry){selectCountry('other')}
+    const info={{topics|tojson}}[t];
+    if(info?.keywords){$('userInput').value=COUNTRIES[selectedCountry]?.quick_starts?.[0]?.q||'';$('userInput').focus()}
+    document.getElementById('sidebar').classList.remove('mob-open');
+}
+
+// ---- MARKDOWN ----
+function md(t){
+    return t.replace(/\*\*\*(.*?)\*\*\*/g,'<strong><em>$1</em></strong>')
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
+        .replace(/`(.*?)`/g,'<code>$1</code>').replace(/^###? (.*$)/gm,'<h3>$1</h3>')
+        .replace(/^\- (.*$)/gm,'<li>$1</li>').replace(/^\* (.*$)/gm,'<li>$1</li>')
+        .replace(/^\d+\. (.*$)/gm,'<li>$1</li>').replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>')
+        .replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^(.*)$/s,'<p>$1</p>')
+        .replace(/<p><h3>/g,'<h3>').replace(/<\/h3><\/p>/g,'</h3>')
+        .replace(/<p><ul>/g,'<ul>').replace(/<\/ul><\/p>/g,'</ul>').replace(/<p><\/p>/g,'');
+}
+
+// ---- ADD MESSAGE ----
+function addMsg(role,content,meta={}){
+    $('welcomeScreen').style.display='none';
+    const div=document.createElement('div');div.className=`message ${role}`;
+    const id='m'+Date.now();
+    let actions='';
+    if(role==='bot'){
+        actions='<div class="msg-actions">';
+        if(meta.topic_label)actions+=`<span class="topic-badge">${meta.topic_icon||'💬'} ${meta.topic_label}</span>`;
+        actions+=`<button class="ma-btn" onclick="listen('${id}')">🔊 Listen</button>`;
+        actions+=`<button class="ma-btn" onclick="translateMsg('${id}')">🌐 Translate</button>`;
+        if(meta.sources?.length)meta.sources.forEach(s=>{actions+=`<a class="src-link" href="${s.link}" target="_blank">📎 ${(s.title||'').substring(0,30)}…</a>`});
+        actions+='</div>';
+    }
+    let vids='';
+    if(meta.videos?.length){
+        vids='<div class="vid-cards">';
+        meta.videos.forEach(v=>{vids+=`<a class="vid-card" href="${v.url}" target="_blank"><img src="${v.thumbnail}" alt="${v.title}" loading="lazy"><div class="vid-info"><div class="vid-title">${v.title}</div><div class="vid-ch">${v.channel}</div></div></a>`});
+        vids+='</div>';
+    }
+    div.innerHTML=`<div class="msg-avatar">${role==='bot'?'🗳️':'👤'}</div><div><div class="msg-body" id="${id}">${role==='bot'?md(content):`<p>${content}</p>`}</div>${actions}${vids}</div>`;
+    const msgs=$('messages');
+    msgs.insertBefore(div,$('typing'));
+    msgs.scrollTop=msgs.scrollHeight;
+    msgCount++;
+}
+
+// ---- TRANSLATE ----
+async function translateMsg(id){
+    const el=$(id);if(!el)return;
+    const lang=$('langSelect').value;
+    if(lang==='en'){alert('Pick a language other than English first.');return}
+    const parent=el.parentElement;
+    if(parent.querySelector('.translated-block'))return; // already translated
+    const btn=parent.querySelector('.ma-btn:nth-child(3)');
+    if(btn){btn.textContent='🌐 …';btn.style.pointerEvents='none'}
+    try{
+        const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({text:el.innerText,target:lang})});
+        const d=await r.json();
+        if(d.translated_text){
+            const t=document.createElement('div');t.className='translated-block';
+            t.innerHTML=`<div class="translated-label">🌐 ${d.target_language_name}</div>${d.translated_text}`;
+            parent.appendChild(t);
+        }
+    }catch(e){console.error(e)}
+    if(btn){btn.textContent='🌐 Translate';btn.style.pointerEvents='auto'}
+}
+
+// ---- TTS ----
+async function listen(id){
+    if(audio){audio.pause();audio=null}
+    const el=$(id);if(!el)return;
+    const btn=el.parentElement.querySelector('.ma-btn');
+    if(btn){btn.textContent='🔊 …';btn.classList.add('playing')}
+    try{
+        const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({text:el.innerText.substring(0,4000),language:$('langSelect').value})});
+        const d=await r.json();
+        if(d.audio){
+            audio=new Audio('data:audio/mp3;base64,'+d.audio);
+            audio.play();
+            audio.onended=()=>{if(btn){btn.textContent='🔊 Listen';btn.classList.remove('playing')}audio=null};
+        }else if(btn){btn.textContent='🔊 N/A'}
+    }catch(e){console.error(e);if(btn){btn.textContent='🔊 Listen';btn.classList.remove('playing')}}
+}
+
+// ---- SEND ----
+function sendQuickStart(q){$('userInput').value=q;sendMessage()}
+const inputEl=$('userInput');
+inputEl.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'});
+inputEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
+
+async function sendMessage(){
+    const text=inputEl.value.trim();if(!text)return;
+    inputEl.value='';inputEl.style.height='auto';$('sendBtn').disabled=true;
+    addMsg('user',text);
+    conversationHistory.push({role:'user',content:text});
+    $('typing').classList.add('visible');$('messages').scrollTop=$('messages').scrollHeight;
+    try{
+        const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({message:text,history:conversationHistory,country:selectedCountry||'other'})});
+        const d=await r.json();
+        $('typing').classList.remove('visible');
+        if(d.error)addMsg('bot','⚠️ '+d.error);
+        else{
+            addMsg('bot',d.response,{topic_label:d.topic_label,topic_icon:d.topic_icon,sources:d.sources,videos:d.videos});
+            conversationHistory.push({role:'assistant',content:d.response});
+            if(d.topic&&d.topic!=='general'){document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('active'));document.querySelector(`[data-topic="${d.topic}"]`)?.classList.add('active')}
+        }
+    }catch(e){$('typing').classList.remove('visible');addMsg('bot','⚠️ Connection error.');console.error(e)}
+    $('sendBtn').disabled=false;inputEl.focus();
+}
+
+// ---- QUIZ ----
+function openQuiz(){$('quizModal').classList.add('visible');loadQuiz();document.getElementById('sidebar').classList.remove('mob-open')}
+function closeQuiz(){$('quizModal').classList.remove('visible')}
+async function loadQuiz(){
+    const topic=currentTopic||'voter_registration';
+    const diff=['beginner','intermediate','advanced'][Math.min(Math.floor(quizScore/3),2)];
+    $('quizQ').textContent='Loading...';$('quizOpts').innerHTML='';
+    $('quizExpl').classList.remove('visible');$('nextQ').style.display='none';
+    try{
+        const r=await fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({topic,difficulty:diff,country:selectedCountry||'other'})});
+        currentQuiz=await r.json();
+        $('quizQ').textContent=currentQuiz.question;
+        $('quizSub').textContent=`${currentQuiz.difficulty} · ${currentQuiz.topic}`;
+        const opts=$('quizOpts');opts.innerHTML='';
+        currentQuiz.options.forEach((o,i)=>{const b=document.createElement('button');b.className='quiz-opt';b.textContent=o;b.onclick=()=>checkAns(i);opts.appendChild(b)});
+    }catch(e){$('quizQ').textContent='Failed to load.'}
+}
+function checkAns(i){
+    document.querySelectorAll('.quiz-opt').forEach((o,j)=>{o.classList.add('disabled');if(j===currentQuiz.correct_index)o.classList.add('correct');if(j===i&&j!==currentQuiz.correct_index)o.classList.add('wrong')});
+    if(i===currentQuiz.correct_index)quizScore++;
+    $('quizExpl').textContent=currentQuiz.explanation;$('quizExpl').classList.add('visible');$('nextQ').style.display='inline-flex';
+}
+</script>
+</body>
+</html>
