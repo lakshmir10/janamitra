@@ -2,7 +2,7 @@
 
 > **"Friend of the People"** — Making democratic processes accessible in any language  
 > **PromptWars: Virtual** | Google Antigravity | **7 Google Services**  
-> **Live Demo:** [CLOUD_RUN_URL]
+> **Live Demo:** https://janamitra-397684547302.us-central1.run.app/
 
 ---
 
