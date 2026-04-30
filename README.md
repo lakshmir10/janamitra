@@ -82,7 +82,7 @@ A user in India asking "How do I register to vote?" needs to hear about Voter ID
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/janamitra.git
+git clone https://github.com/lakshmir10/janamitra.git
 cd janamitra
 pip install -r requirements.txt
 export GEMINI_API_KEY="your-key"
